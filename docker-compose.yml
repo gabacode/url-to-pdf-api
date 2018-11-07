@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    container_name: "url2pdfapi"
+    ports:
+      - '9000:9000'
+    volumes:
+    - .:/app
+    #- node_modules:/usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - ALLOW_HTTP=true
+      - DEBUG_MODE=false
+    command: "./start.sh"
+
+#    networks:
+#      - "OLONET"
+#      - "OLOWEBNET"
+volumes:
+  app:
+  node_modules:

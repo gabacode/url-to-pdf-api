@@ -306,7 +306,7 @@ First, clone the repository and cd into it.
 
 #### 3. Docker
 
-- `docker build .`
+- `docker-compose up -d`
 - Run docker by command `docker run -p 9000:9000 --env-file .env url-to-pdf-api:latest`
 - Enjoy
 
