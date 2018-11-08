@@ -306,8 +306,9 @@ First, clone the repository and cd into it.
 
 #### 3. Docker
 
+- If needed add configuration to docker-compose:
+    `cp docker-compose.override.example.yml docker-compose.override.yml`
 - `docker-compose up -d`
-- Run docker by command `docker run -p 9000:9000 --env-file .env url-to-pdf-api:latest`
 - Enjoy
 
 ### Techstack
