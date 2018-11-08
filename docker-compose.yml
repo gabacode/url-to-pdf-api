@@ -4,15 +4,13 @@ services:
   app:
     build: .
     container_name: "url2pdfapi"
+    # To set on docker-compose.override.yml
+    # ports:
+    #  - '9000:9000'
     volumes:
     - .:/app
-    #- node_modules:/usr/src/app/node_modules
     environment:
       - NODE_ENV=development
       - ALLOW_HTTP=true
       - DEBUG_MODE=false
     command: "./start.sh"
-networks:
-  default:
-    external:
-      name: OLOWEBNET
