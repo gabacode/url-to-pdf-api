@@ -8,19 +8,19 @@
 
 ![Logo](docs/logo.png)
 
-**⚠️ WARNING ⚠️** _Don't serve this API publicly to the internet unless you are aware of the
+**⚠️ WARNING ⚠️** *Don't serve this API publicly to the internet unless you are aware of the
 risks. It allows API users to run any JavaScript code inside a Chrome session on the server.
-It's fairly easy to expose the contents of files on the server. You have been warned!. See https://github.com/alvarcarto/url-to-pdf-api/issues/12 for background._
+It's fairly easy to expose the contents of files on the server. You have been warned!. See https://github.com/alvarcarto/url-to-pdf-api/issues/12 for background.*
 
 **⭐️ Features:**
 
-- Converts any URL or HTML content to a PDF file or an image (PNG/JPEG)
-- Rendered with Headless Chrome, using [Puppeteer](https://github.com/GoogleChrome/puppeteer). The PDFs should match to the ones generated with a desktop Chrome.
-- Sensible defaults but everything is configurable.
-- Single-page app (SPA) support. Waits until all network requests are finished before rendering.
-- Easy deployment to Heroku. We love Lambda but...Deploy to Heroku button.
-- Renders lazy loaded elements. _(scrollPage option)_
-- Supports optional `x-api-key` authentication. _(`API_TOKENS` env var)_
+* Converts any URL or HTML content to a PDF file or an image (PNG/JPEG)
+* Rendered with Headless Chrome, using [Puppeteer](https://github.com/GoogleChrome/puppeteer). The PDFs should match to the ones generated with a desktop Chrome.
+* Sensible defaults but everything is configurable.
+* Single-page app (SPA) support. Waits until all network requests are finished before rendering.
+* Easy deployment to Heroku. We love Lambda but...Deploy to Heroku button.
+* Renders lazy loaded elements. *(scrollPage option)*
+* Supports optional `x-api-key` authentication. *(`API_TOKENS` env var)*
 
 Usage is as simple as https://url-to-pdf-api.herokuapp.com/api/render?url=http://google.com. There's also a `POST /api/render` if you prefer to send options in the body.
 
@@ -35,9 +35,9 @@ content to a PDF. This API does just that.
 
 **🚀 Shortcuts:**
 
-- [Examples](#examples)
-- [API](#api)
-- [I want to run this myself](#development)
+* [Examples](#examples)
+* [API](#api)
+* [I want to run this myself](#development)
 
 ## How it works
 
@@ -48,16 +48,19 @@ and requests are direct connections to it.
 
 ### Good to know
 
-- **By default, page's `@media print` CSS rules are ignored**. We set Chrome to emulate `@media screen` to make the default PDFs look more like actual sites. To get results closer to desktop Chrome, add `&emulateScreenMedia=false` query parameter. See more at [Puppeteer API docs](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagepdfoptions).
+* **By default, page's `@media print` CSS rules are ignored**. We set Chrome to emulate `@media screen` to make the default PDFs look more like actual sites. To get results closer to desktop Chrome, add `&emulateScreenMedia=false` query parameter. See more at [Puppeteer API docs](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagepdfoptions).
 
-- Chrome is launched with `--no-sandbox --disable-setuid-sandbox` flags to fix usage in Heroku. See [this issue](https://github.com/GoogleChrome/puppeteer/issues/290).
+* Chrome is launched with `--no-sandbox --disable-setuid-sandbox` flags to fix usage in Heroku. See [this issue](https://github.com/GoogleChrome/puppeteer/issues/290).
 
-- Heavy pages may cause Chrome to crash if the server doesn't have enough RAM.
+* Heavy pages may cause Chrome to crash if the server doesn't have enough RAM.
+
+* Docker wrapper for this can be found here: https://github.com/microbox/node-url-to-pdf-api
+
 
 ## Examples
 
-_Note: the demo Heroku app runs on a free dyno which sleep after idle.
-A request to sleeping dyno may take even 30 seconds._
+*Note: the demo Heroku app runs on a free dyno which sleep after idle.
+A request to sleeping dyno may take even 30 seconds.*
 
 **The most minimal example, render google.com**
 
@@ -92,6 +95,11 @@ https://url-to-pdf-api.herokuapp.com/api/render?url=http://google.com&pdf.margin
 
 https://url-to-pdf-api.herokuapp.com/api/render?url=http://google.com&waitFor=1000
 
+
+**Download the PDF with a given attachment name**
+
+https://url-to-pdf-api.herokuapp.com/api/render?url=http://google.com&attachmentName=google.pdf
+
 **Wait for an element macthing the selector `input` appears.**
 
 https://url-to-pdf-api.herokuapp.com/api/render?url=http://google.com&waitFor=input
@@ -111,25 +119,26 @@ curl -o html.pdf -XPOST -d@page.html -H"content-type: text/html" https://url-to-
 ## API
 
 To understand the API options, it's useful to know how [Puppeteer](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md)
-is internally used by this API. The [render code](https://github.com/alvarcarto/url-to-pdf-api/blob/master/src/core/pdf-core.js#L26)
-is really simple, check it out. Render flow:
+is internally used by this API. The [render code](https://github.com/alvarcarto/url-to-pdf-api/blob/master/src/core/render-core.js)
+is quite simple, check it out. Render flow:
 
 1. **`page.setViewport(options)`** where options matches `viewport.*`.
-2. _Possibly_ **`page.emulateMedia('screen')`** if `emulateScreenMedia=true` is set.
+2. *Possibly* **`page.emulateMedia('screen')`** if `emulateScreenMedia=true` is set.
 3. Render url **or** html.
 
-   If `url` is defined, **`page.goto(url, options)`** is called and options match `goto.*`.
-   Otherwise **`` page.goto(`data:text/html,${html}`, options) ``** is called where html is taken from request body. This workaround was found from [Puppeteer issue](https://github.com/GoogleChrome/puppeteer/issues/728).
+    If `url` is defined, **`page.goto(url, options)`** is called and options match `goto.*`.
+    Otherwise **`page.setContent(html, options)`** is called where html is taken from request body, and options match `goto.*`.
 
-4. _Possibly_ **`page.waitFor(numOrStr)`** if e.g. `waitFor=1000` is set.
-5. _Possibly_ **Scroll the whole page** to the end before rendering if e.g. `scrollPage=true` is set.
+4. *Possibly* **`page.waitFor(numOrStr)`** if e.g. `waitFor=1000` is set.
+5. *Possibly* **Scroll the whole page** to the end before rendering if e.g. `scrollPage=true` is set.
 
-   Useful if you want to render a page which lazy loads elements.
+    Useful if you want to render a page which lazy loads elements.
 
 6. Render the output
 
   * If output is `pdf` rendering is done with **`page.pdf(options)`** where options matches `pdf.*`.
   * Else if output is `screenshot` rendering is done with **`page.screenshot(options)`** where options matches `screenshot.*`.
+
 
 ### GET /api/render
 
@@ -141,54 +150,56 @@ expressed with the dot notation. E.g. `?pdf.scale=2` instead of `{ pdf: { scale:
 
 The only required parameter is `url`.
 
-| Parameter                  | Type             | Default       | Description                                                                                                                                                                                                                                                                           |
-| -------------------------- | ---------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| url                        | string           | -             | URL to render as PDF. (required)                                                                                                                                                                                                                                                      |
-| emulateScreenMedia         | boolean          | `true`        | Emulates `@media screen` when rendering the PDF.                                                                                                                                                                                                                                      |
-| ignoreHttpsErrors          | boolean          | `false`       | Ignores possible HTTPS errors when navigating to a page.                                                                                                                                                                                                                              |
-| scrollPage                 | boolean          | `false`       | Scroll page down before rendering to trigger lazy loading elements.                                                                                                                                                                                                                   |
-| waitFor                    | number or string | -             | Number in ms to wait before render or selector element to wait before render.                                                                                                                                                                                                         |
-| viewport.width             | number           | `1600`        | Viewport width.                                                                                                                                                                                                                                                                       |
-| viewport.height            | number           | `1200`        | Viewport height.                                                                                                                                                                                                                                                                      |
-| viewport.deviceScaleFactor | number           | `1`           | Device scale factor (could be thought of as dpr).                                                                                                                                                                                                                                     |
-| viewport.isMobile          | boolean          | `false`       | Whether the meta viewport tag is taken into account.                                                                                                                                                                                                                                  |
-| viewport.hasTouch          | boolean          | `false`       | Specifies if viewport supports touch events.                                                                                                                                                                                                                                          |
-| viewport.isLandscape       | boolean          | `false`       | Specifies if viewport is in landscape mode.                                                                                                                                                                                                                                           |
-| cookies[0][name]           | string           | -             | Cookie name (required)                                                                                                                                                                                                                                                                |
-| cookies[0][value]          | string           | -             | Cookie value (required)                                                                                                                                                                                                                                                               |
-| cookies[0][url]            | string           | -             | Cookie url                                                                                                                                                                                                                                                                            |
-| cookies[0][domain]         | string           | -             | Cookie domain                                                                                                                                                                                                                                                                         |
-| cookies[0][path]           | string           | -             | Cookie path                                                                                                                                                                                                                                                                           |
-| cookies[0][expires]        | number           | -             | Cookie expiry in unix time                                                                                                                                                                                                                                                            |
-| cookies[0][httponly]       | boolean          | -             | Cookie httpOnly                                                                                                                                                                                                                                                                       |
-| cookies[0][secure]         | boolean          | -             | Cookie secure                                                                                                                                                                                                                                                                         |
-| cookies[0][samesite]       | string           | -             | `Strict` or `Lax`                                                                                                                                                                                                                                                                     |
-| goto.timeout               | number           | `30000`       | Maximum navigation time in milliseconds, defaults to 30 seconds, pass 0 to disable timeout.                                                                                                                                                                                           |
-| goto.waitUntil             | string           | `networkidle` | When to consider navigation succeeded. Options: `load`, `networkidle`. `load` = consider navigation to be finished when the load event is fired. `networkidle` = consider navigation to be finished when the network activity stays "idle" for at least `goto.networkIdleTimeout` ms. |
-| goto.networkIdleInflight   | number           | `2`           | Maximum amount of inflight requests which are considered "idle". Takes effect only with `goto.waitUntil`: 'networkidle' parameter.                                                                                                                                                    |
-| goto.networkIdleTimeout    | number           | `2000`        | A timeout to wait before completing navigation. Takes effect only with waitUntil: 'networkidle' parameter.                                                                                                                                                                            |
-| pdf.scale                  | number           | `1`           | Scale of the webpage rendering.                                                                                                                                                                                                                                                       |
-| pdf.printBackground        | boolean          | `false`       | Print background graphics.                                                                                                                                                                                                                                                            |
-| pdf.displayHeaderFooter    | boolean          | `false`       | Display header and footer.                                                                                                                                                                                                                                                            |
-| pdf.headerTemplate         | string           | -             | HTML template to use as the header of each page in the PDF. **Currently Puppeteer basically only supports a single line of text and you must use pdf.margins+CSS to make the header appear!** See https://github.com/alvarcarto/url-to-pdf-api/issues/77.                             |
-| pdf.footerTemplate         | string           | -             | HTML template to use as the footer of each page in the PDF. **Currently Puppeteer basically only supports a single line of text and you must use pdf.margins+CSS to make the footer appear!** See https://github.com/alvarcarto/url-to-pdf-api/issues/77.                             |
-| pdf.landscape              | boolean          | `false`       | Paper orientation.                                                                                                                                                                                                                                                                    |
-| pdf.pageRanges             | string           | -             | Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string, which means print all pages.                                                                                                                                                                              |
-| pdf.format                 | string           | `A4`          | Paper format. If set, takes priority over width or height options.                                                                                                                                                                                                                    |
-| pdf.width                  | string           | -             | Paper width, accepts values labeled with units.                                                                                                                                                                                                                                       |
-| pdf.height                 | string           | -             | Paper height, accepts values labeled with units. **We have `auto` value that can equal body contain height**                                                                                                                                                                          |
-| pdf.margin.top             | string           | -             | Top margin, accepts values labeled with units.                                                                                                                                                                                                                                        |
-| pdf.margin.right           | string           | -             | Right margin, accepts values labeled with units.                                                                                                                                                                                                                                      |
-| pdf.margin.bottom          | string           | -             | Bottom margin, accepts values labeled with units.                                                                                                                                                                                                                                     |
-| pdf.margin.left            | string           | -             | Left margin, accepts values labeled with units.                                                                                                                                                                                                                                       |
-| screenshot.fullPage        | boolean          | `true`        | When true, takes a screenshot of the full scrollable page. |
-| screenshot.type            | string           | `png`         | Screenshot image type. Possible values: `png`, `jpeg` |
-| screenshot.quality         | number           | -             | The quality of the JPEG image, between 0-100. Only applies when `screenshot.type` is `jpeg`. |
-| screenshot.omitBackground  | boolean          | `false`       | Hides default white background and allows capturing screenshots with transparency. |
-| screenshot.clip.x          | number           | -             | Specifies x-coordinate of top-left corner of clipping region of the page. |
-| screenshot.clip.y          | number           | -             | Specifies y-coordinate of top-left corner of clipping region of the page. |
-| screenshot.clip.width      | number           | -             | Specifies width of clipping region of the page. |
-| screenshot.clip.height     | number           | -             | Specifies height of clipping region of the page. |
+Parameter | Type | Default | Description
+----------|------|---------|------------
+url | string | - | URL to render as PDF. (required)
+output | string | pdf | Specify the output format. Possible values: `pdf` or `screenshot`.
+emulateScreenMedia | boolean | `true` | Emulates `@media screen` when rendering the PDF.
+ignoreHttpsErrors | boolean | `false` | Ignores possible HTTPS errors when navigating to a page.
+scrollPage | boolean | `false` | Scroll page down before rendering to trigger lazy loading elements.
+waitFor | number or string | - | Number in ms to wait before render or selector element to wait before render.
+attachmentName | string | - | When set, the `content-disposition` headers are set and browser will download the PDF instead of showing inline. The given string will be used as the name for the file.
+viewport.width | number | `1600` | Viewport width.
+viewport.height | number | `1200` | Viewport height.
+viewport.deviceScaleFactor | number | `1` | Device scale factor (could be thought of as dpr).
+viewport.isMobile | boolean | `false` | Whether the meta viewport tag is taken into account.
+viewport.hasTouch | boolean | `false` | Specifies if viewport supports touch events.
+viewport.isLandscape | boolean | `false` | Specifies if viewport is in landscape mode.
+cookies[0][name] | string | - | Cookie name (required)
+cookies[0][value] | string | - | Cookie value (required)
+cookies[0][url] | string | - | Cookie url
+cookies[0][domain] | string | - | Cookie domain
+cookies[0][path] | string | - | Cookie path
+cookies[0][expires] | number | - | Cookie expiry in unix time
+cookies[0][httpOnly] | boolean | - | Cookie httpOnly
+cookies[0][secure] | boolean | - | Cookie secure
+cookies[0][sameSite] | string | - | `Strict` or `Lax`
+goto.timeout | number | `30000` |  Maximum navigation time in milliseconds, defaults to 30 seconds, pass 0 to disable timeout.
+goto.waitUntil | string | `networkidle` | When to consider navigation succeeded. Options: `load`, `networkidle`. `load` = consider navigation to be finished when the load event is fired. `networkidle` = consider navigation to be finished when the network activity stays "idle" for at least `goto.networkIdleTimeout` ms.
+goto.networkIdleInflight | number | `2` | Maximum amount of inflight requests which are considered "idle". Takes effect only with `goto.waitUntil`: 'networkidle' parameter.
+goto.networkIdleTimeout | number | `2000` | A timeout to wait before completing navigation. Takes effect only with waitUntil: 'networkidle' parameter.
+pdf.scale | number | `1` | Scale of the webpage rendering.
+pdf.printBackground | boolean | `false`| Print background graphics.
+pdf.displayHeaderFooter | boolean | `false` | Display header and footer.
+pdf.headerTemplate | string | - | HTML template to use as the header of each page in the PDF. **Currently Puppeteer basically only supports a single line of text and you must use pdf.margins+CSS to make the header appear!** See https://github.com/alvarcarto/url-to-pdf-api/issues/77.
+pdf.footerTemplate | string | - | HTML template to use as the footer of each page in the PDF. **Currently Puppeteer basically only supports a single line of text and you must use pdf.margins+CSS to make the footer appear!** See https://github.com/alvarcarto/url-to-pdf-api/issues/77.
+pdf.landscape | boolean | `false` | Paper orientation.
+pdf.pageRanges | string | - | Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string, which means print all pages.
+pdf.format | string | `A4` | Paper format. If set, takes priority over width or height options.
+pdf.width | string | - | Paper width, accepts values labeled with units.
+pdf.height | string | - | Paper height, accepts values labeled with units.
+pdf.margin.top | string | - | Top margin, accepts values labeled with units.
+pdf.margin.right | string | - | Right margin, accepts values labeled with units.
+pdf.margin.bottom | string | - | Bottom margin, accepts values labeled with units.
+pdf.margin.left | string | - | Left margin, accepts values labeled with units.
+screenshot.fullPage | boolean | `true` | When true, takes a screenshot of the full scrollable page.
+screenshot.type | string | `png` | Screenshot image type. Possible values: `png`, `jpeg`
+screenshot.quality | number | - | The quality of the JPEG image, between 0-100. Only applies when `screenshot.type` is `jpeg`.
+screenshot.omitBackground | boolean | `false` | Hides default white background and allows capturing screenshots with transparency.
+screenshot.clip.x | number | - | Specifies x-coordinate of top-left corner of clipping region of the page.
+screenshot.clip.y | number | - | Specifies y-coordinate of top-left corner of clipping region of the page.
+screenshot.clip.width | number | - | Specifies width of clipping region of the page.
+screenshot.clip.height | number | - | Specifies height of clipping region of the page.
 
 
 **Example:**
@@ -196,6 +207,7 @@ The only required parameter is `url`.
 ```bash
 curl -o google.pdf https://url-to-pdf-api.herokuapp.com/api/render?url=http://google.com
 ```
+
 
 ### POST /api/render - (JSON)
 
@@ -265,7 +277,7 @@ HTML to render is sent in body. All options are passed in query parameters.
 Supports exactly the same query parameters as `GET /api/render`, except `url`
 paremeter.
 
-_Remember that relative links do not work._
+*Remember that relative links do not work.*
 
 **Example:**
 
@@ -285,36 +297,31 @@ The code requires Node 8+ (async, await).
 Scroll this readme up to the Deploy to Heroku -button. Click it and follow
 instructions.
 
-**WARNING:** _Heroku dynos have a very low amount of RAM. Rendering heavy pages
+**WARNING:** *Heroku dynos have a very low amount of RAM. Rendering heavy pages
 may cause Chrome instance to crash inside Heroku dyno. 512MB should be
 enough for most real-life use cases such as receipts. Some news sites may need
-even 2GB of RAM._
+even 2GB of RAM.*
+
 
 #### 2. Local development
 
 First, clone the repository and cd into it.
 
-- `cp .env.sample .env`
-- Fill in the blanks in `.env`
-- `source .env` or `bash .env`
+* `cp .env.sample .env`
+* Fill in the blanks in `.env`
+* `source .env` or `bash .env`
 
   Or use [autoenv](https://github.com/kennethreitz/autoenv).
 
-- `npm install`
-- `npm start` Start express server locally
-- Server runs at http://localhost:9000 or what `$PORT` env defines
+* `npm install`
+* `npm start` Start express server locally
+* Server runs at http://localhost:9000 or what `$PORT` env defines
 
-#### 3. Docker
-
-- If needed add configuration to docker-compose:
-    `cp docker-compose.override.example.yml docker-compose.override.yml`
-- `docker-compose up -d`
-- Enjoy
 
 ### Techstack
 
-- Node 8+ (async, await), written in ES7
-- [Express.js](https://expressjs.com/) app with a nice internal architecture, based on [these conventions](https://github.com/kimmobrunfeldt/express-example).
-- Hapi-style Joi validation with [express-validation](https://github.com/andrewkeig/express-validation)
-- Heroku + [Puppeteer buildpack](https://github.com/jontewks/puppeteer-heroku-buildpack)
-- [Puppeteer](https://github.com/GoogleChrome/puppeteer) to control Chrome
+* Node 8+ (async, await), written in ES7
+* [Express.js](https://expressjs.com/) app with a nice internal architecture, based on [these conventions](https://github.com/kimmobrunfeldt/express-example).
+* Hapi-style Joi validation with [express-validation](https://github.com/andrewkeig/express-validation)
+* Heroku + [Puppeteer buildpack](https://github.com/jontewks/puppeteer-heroku-buildpack)
+* [Puppeteer](https://github.com/GoogleChrome/puppeteer) to control Chrome
