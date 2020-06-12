@@ -3,6 +3,27 @@ const _ = require('lodash');
 const config = require('../config');
 const logger = require('../util/logger')(__filename);
 
+
+async function createBrowser(opts) {
+  const browserOpts = {
+    ignoreHTTPSErrors: opts.ignoreHttpsErrors,
+    sloMo: config.DEBUG_MODE ? 250 : undefined,
+  };
+  if (config.BROWSER_WS_ENDPOINT) {
+    browserOpts.browserWSEndpoint = config.BROWSER_WS_ENDPOINT;
+    return puppeteer.connect(browserOpts);
+  }
+  if (config.BROWSER_EXECUTABLE_PATH) {
+    browserOpts.executablePath = config.BROWSER_EXECUTABLE_PATH;
+  }
+  browserOpts.headless = !config.DEBUG_MODE;
+  browserOpts.args = ['--no-sandbox', '--disable-setuid-sandbox'];
+  if (!opts.enableGPU || navigator.userAgent.indexOf('Win') !== -1) {
+    browserOpts.args.push('--disable-gpu');
+  }
+  return puppeteer.launch(browserOpts);
+}
+
 async function render(_opts = {}) {
   const opts = _.merge({
     cookies: [],
@@ -37,12 +58,7 @@ async function render(_opts = {}) {
 
   logOpts(opts);
 
-  const browser = await puppeteer.launch({
-    headless: !config.DEBUG_MODE,
-    ignoreHTTPSErrors: opts.ignoreHttpsErrors,
-    args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox'],
-    sloMo: config.DEBUG_MODE ? 250 : undefined,
-  });
+  const browser = await createBrowser(opts);
   const page = await browser.newPage();
 
   page.on('console', (...args) => logger.info('PAGE LOG:', ...args));
@@ -90,7 +106,7 @@ async function render(_opts = {}) {
       await client.send('Network.setCookies', { cookies: opts.cookies });
     }
 
-    if (opts.html) {
+    if (_.isString(opts.html)) {
       logger.info('Set HTML ..');
       await page.setContent(opts.html, opts.goto);
     } else {
@@ -139,6 +155,8 @@ async function render(_opts = {}) {
 
     if (opts.output === 'pdf') {
       data = await page.pdf(opts.pdf);
+    } else if (opts.output === 'html') {
+      data = await page.evaluate(() => document.body.innerHTML);
     } else {
       // This is done because puppeteer throws an error if fullPage and clip is used at the same
       // time even though clip is just empty object {}
@@ -147,8 +165,14 @@ async function render(_opts = {}) {
       if (clipContainsSomething) {
         screenshotOpts.clip = opts.screenshot.clip;
       }
-
-      data = await page.screenshot(screenshotOpts);
+      if (_.isNil(opts.screenshot.selector)) {
+        data = await page.screenshot(screenshotOpts);
+      } else {
+        const selElement = await page.$(opts.screenshot.selector);
+        if (!_.isNull(selElement)) {
+          data = await selElement.screenshot();
+        } 
+      }
     }
   } catch (err) {
     logger.error(`Error when rendering page: ${err}`);
@@ -160,7 +184,7 @@ async function render(_opts = {}) {
       await browser.close();
     }
   }
-
+  
   return data;
 }
 
