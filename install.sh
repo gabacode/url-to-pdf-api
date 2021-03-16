@@ -11,7 +11,7 @@ mkdir -p node_modules
 sudo chmod -R 777 node_modules
 
 if [ ! -f ./.docker-compose.override.yml ];then
-        cp .docker-compose.override.example.yml .docker-compose.override.yml
+        cp docker-compose.override.example.yml docker-compose.override.yml
 else
         echo "*** ATTENZIONE: File .env trovato. Skpping"
 fi
