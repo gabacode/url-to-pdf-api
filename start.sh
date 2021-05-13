@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-
-echo "nameserver 8.8.8.8" > /etc/resolv.conf
+# for local network
+# echo "nameserver 8.8.8.8" > /etc/resolv.conf
 # Installa i node_modules
 yarn install
 
